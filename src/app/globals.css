@@ -1,26 +1,57 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-inter: var(--font-inter);
+  --font-mondwest: var(--font-mondwest);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), Inter, sans-serif;
+  background: #0c0c0c;
+  color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+}
+
+/* .hero-grid {
+  background-color: #0c0c0c;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.09) 1px, transparent 1px);
+  background-size: 130px 90px;
+} */
+
+/* Dashed grid used in the right panel of CentralizeSection */
+.dashed-grid {
+  background-image: url("data:image/svg+xml,%3Csvg width='120' height='90' xmlns='http://www.w3.org/2000/svg'%3E%3Cline x1='119.5' y1='0' x2='119.5' y2='90' stroke='rgba(255,255,255,0.13)' stroke-width='1' stroke-dasharray='5 7'/%3E%3Cline x1='0' y1='89.5' x2='120' y2='89.5' stroke='rgba(255,255,255,0.08)' stroke-width='1' stroke-dasharray='5 7'/%3E%3C/svg%3E");
+  background-size: 60px 60px;
+  background-color: #0c0c0c91;
+}
+
+/* ── Marquee animations for TechStackVisual ── */
+@keyframes marquee-left {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes marquee-right {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+.marquee-left  { animation: marquee-left  linear infinite;   animation-play-state: running; }
+.marquee-right { animation: marquee-right linear infinite;animation-play-state: running;  }
+
+.marquee-row:hover .marquee-left,
+.marquee-row:hover .marquee-right {
+  animation-play-state: paused;
 }
