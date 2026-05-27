@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import Providers from "@/components/Providers";
+import SmoothScroll from "@/components/smoothScroll";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -27,7 +28,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${mondwest.variable}`}>
-      <body><Providers>{children}</Providers></body>
+      <body><>
+      <SmoothScroll/>
+      {children}</></body>
     </html>
   );
 }
