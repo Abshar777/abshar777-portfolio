@@ -62,10 +62,10 @@ export default function Nav() {
             Resume
           </a>
           <button
-            onClick={() => handleNav("#contact")}
+            onClick={() => window.open("https://wa.me/918590026442")}
             className="text-[13px] font-semibold bg-white text-black hover:bg-gray-100 transition-colors rounded-lg px-4 py-[7px] whitespace-nowrap"
           >
-            Call me
+            chat with me
           </button>
 
           {/* Hamburger */}

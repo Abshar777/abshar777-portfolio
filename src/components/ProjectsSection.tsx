@@ -5,7 +5,16 @@
 // ─────────────────────────────────────────────
 
 import Image from "next/image";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
+
+// ── Word-wrapper (inline-block so transform + filter work on inline text) ─────
+function W({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <span className={`sw inline-block ${className}`}>{children}</span>;
+}
 
 // ─── Mock visuals ────────────────────────────
 
@@ -509,7 +518,11 @@ const PROJECTS: Project[] = [
 
 function FeaturedCard({ p }: { p: Project }) {
   return (
-    <div className="group relative flex flex-col md:flex-row overflow-hidden rounded-2xl border border-white/[0.08] backdrop-blur-sm bg-white/[0.02] hover:border-white/[0.15] hover:bg-white/[0.03] transition-all duration-300">
+    <div onClick={()=>{
+      if(typeof window!==undefined){
+        window.open(p.link,"_blank")
+      }
+    }} className="group cursor-pointer relative flex flex-col md:flex-row overflow-hidden rounded-2xl border border-white/[0.08] backdrop-blur-sm bg-white/[0.02] hover:border-white/[0.15] hover:bg-white/[0.03] transition-all duration-300">
       {/* Content */}
       <div className="flex flex-col justify-center px-7 pt-8 pb-7 md:w-[44%] md:border-r border-b md:border-b-0 border-white/[0.06]">
         <div className="flex items-center gap-2.5 mb-4">
@@ -549,7 +562,11 @@ function FeaturedCard({ p }: { p: Project }) {
 
 function SmallCard({ p }: { p: Project }) {
   return (
-    <div className="group flex flex-col overflow-hidden backdrop-blur-sm rounded-2xl border border-white/[0.08] bg-white/[0.02] hover:border-white/[0.15] hover:bg-white/[0.03] transition-all duration-300">
+    <div onClick={()=>{
+      if(typeof window!==undefined){
+        window.open(p.link,"_blank")
+      }
+    }} className="group cursor-pointer flex flex-col overflow-hidden backdrop-blur-sm rounded-2xl border border-white/[0.08] bg-white/[0.02] hover:border-white/[0.15] hover:bg-white/[0.03] transition-all duration-300">
       {/* Visual */}
       <div className="h-[190px] p-4 bg-[#060606] border-b border-white/[0.06]">
         <p.Visual />
@@ -691,7 +708,11 @@ const WEBSITES: WebSite[] = [
 
 function WebCard({ site }: { site: WebSite }) {
   return (
-    <div className="group flex flex-col overflow-hidden backdrop-blur-sm rounded-2xl border border-white/[0.08] bg-white/[0.02] hover:border-white/[0.14] hover:bg-white/[0.03] transition-all duration-300">
+    <div onClick={()=>{
+      if(typeof window!==undefined){
+        window.open(site.link,"_blank")
+      }
+    }} className="group flex cursor-pointer flex-col overflow-hidden backdrop-blur-sm rounded-2xl border border-white/[0.08] bg-white/[0.02] hover:border-white/[0.14] hover:bg-white/[0.03] transition-all duration-300">
       {/* Visual */}
       <div className="h-[155px] p-3.5 bg-[#060606] border-b border-white/[0.06]">
         <LandingMock accent={site.accent} url={site.url} tagline={site.tagline} />
@@ -724,9 +745,98 @@ function WebCard({ site }: { site: WebSite }) {
 
 export default function ProjectsSection() {
   const [featured, ...rest] = PROJECTS;
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+
+      // ── Section label "03" ─────────────────────────────────────────────
+      gsap.fromTo(
+        ".proj-label",
+        { opacity: 0, y: 10, filter: "blur(6px)" },
+        {
+          opacity: 1, y: 0, filter: "blur(0px)",
+          duration: 0.7, ease: "power3.out",
+          scrollTrigger: { trigger: ".proj-label", start: "top 86%" },
+          onComplete() { gsap.set(".proj-label", { filter: "none" }); },
+        },
+      );
+
+      // ── Heading word-by-word blur ──────────────────────────────────────
+      gsap.set(".proj-heading .sw", { willChange: "filter, transform, opacity" });
+
+      gsap.fromTo(
+        ".proj-heading .sw",
+        { opacity: 0, filter: "blur(14px)", y: 22 },
+        {
+          opacity: 1, filter: "blur(0px)", y: 0,
+          duration: 0.88, stagger: 0.07, ease: "power3.out",
+          scrollTrigger: { trigger: ".proj-heading", start: "top 82%" },
+          onComplete() {
+            gsap.set(".proj-heading .sw", { willChange: "auto", filter: "none" });
+          },
+        },
+      );
+
+      // ── Sub-copy ───────────────────────────────────────────────────────
+      gsap.fromTo(
+        ".proj-sub",
+        { opacity: 0, filter: "blur(10px)", y: 18 },
+        {
+          opacity: 1, filter: "blur(0px)", y: 0,
+          duration: 0.9, ease: "power3.out",
+          scrollTrigger: { trigger: ".proj-sub", start: "top 86%" },
+          onComplete() { gsap.set(".proj-sub", { filter: "none" }); },
+        },
+      );
+
+      // ── Featured card ──────────────────────────────────────────────────
+      gsap.fromTo(
+        ".proj-featured",
+        { opacity: 0, y: 50 },
+        {
+          opacity: 1, y: 0, duration: 1.05, ease: "expo.out",
+          scrollTrigger: { trigger: ".proj-featured", start: "top 85%" },
+        },
+      );
+
+      // ── Small project cards stagger ────────────────────────────────────
+      gsap.fromTo(
+        ".proj-cards > div",
+        { opacity: 0, y: 40 },
+        {
+          opacity: 1, y: 0, duration: 0.85, stagger: 0.12, ease: "expo.out",
+          scrollTrigger: { trigger: ".proj-cards", start: "top 84%" },
+        },
+      );
+
+      // ── Website divider line ───────────────────────────────────────────
+      gsap.fromTo(
+        ".proj-divider",
+        { opacity: 0 },
+        {
+          opacity: 1, duration: 0.9,
+          scrollTrigger: { trigger: ".proj-divider", start: "top 90%" },
+        },
+      );
+
+      // ── Website cards stagger ──────────────────────────────────────────
+      gsap.fromTo(
+        ".proj-web-cards > div",
+        { opacity: 0, y: 40 },
+        {
+          opacity: 1, y: 0, duration: 0.8, stagger: 0.08, ease: "expo.out",
+          scrollTrigger: { trigger: ".proj-web-cards", start: "top 86%" },
+        },
+      );
+
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
-    <section className="relative overflow-hidden hero-grid">
+    <section ref={sectionRef} className="relative overflow-hidden hero-grid">
       {/* Left vignette */}
       <div className="absolute top-0 left-0 h-full pointer-events-none z-[1]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -750,39 +860,45 @@ export default function ProjectsSection() {
 
         {/* ── Heading ── */}
         <div className="mb-10 max-md:flex-col max-md:flex items-center justify-center sm:mb-14">
-          <p className="font-mondwest text-[#1B48E8] text-[13px] tracking-[0.1em] mb-2">03</p>
+          <p className="proj-label font-mondwest text-[#1B48E8] text-[13px] tracking-[0.1em] mb-2">03</p>
           <h2
-            className="font-inter max-md:text-center font-bold text-white leading-[1.05] tracking-[-0.025em] max-w-[700px]"
+            className="proj-heading font-inter max-md:text-center font-bold text-white leading-[1.05] tracking-[-0.025em] max-w-[700px]"
             style={{ fontSize: "clamp(1.75rem, 4.5vw, 3rem)" }}
           >
-            Selected work &amp;{" "} <br className="" />
-            <span className="font-mondwest font-normal italic text-white/70">projects</span>
-            {" "}
-            <Image
-              src="/icon-folder.png"
-              alt=""
-              width={500}
-              height={500}
-              className="inline-block align-middle w-auto h-[1.4em] mx-1"
-            />
+            <W>Selected</W>{" "}
+            <W>work</W>{" "}
+            <W>&amp;</W>
+            <br />
+            <W className="font-mondwest font-normal italic text-white/70">projects</W>{" "}
+            <W className="align-middle">
+              <Image
+                src="/icon-folder.png"
+                alt=""
+                width={500}
+                height={500}
+                className="inline-block align-middle w-auto h-[1.4em] mx-1"
+              />
+            </W>
           </h2>
-          <p className="text-white/40 max-md:text-center text-[13px] sm:text-[14px] mt-3 max-w-[480px] leading-relaxed">
+          <p className="proj-sub text-white/40 max-md:text-center text-[13px] sm:text-[14px] mt-3 max-w-[480px] leading-relaxed">
             Production systems shipped end-to-end — trading platforms, CRMs, EdTech streaming, and FinTech operations.
           </p>
         </div>
 
         {/* ── Featured card ── */}
-        <div className="mb-4 sm:mb-5">
+        <div className="proj-featured mb-4 sm:mb-5">
           <FeaturedCard p={featured} />
         </div>
 
         {/* ── 3-card grid ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-          {rest.map((p) => <SmallCard key={p.num} p={p} />)}
+        <div className="proj-cards grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          {rest.map((p) => (
+            <div key={p.num}><SmallCard p={p} /></div>
+          ))}
         </div>
 
         {/* ── Website projects divider ── */}
-        <div className="flex items-center gap-4 mt-12 sm:mt-16 mb-6 sm:mb-8">
+        <div className="proj-divider flex items-center gap-4 mt-12 sm:mt-16 mb-6 sm:mb-8">
           <div className="h-px flex-1 bg-white/[0.06]" />
           <span className="text-[10px] font-semibold tracking-[0.16em] uppercase text-white/25 shrink-0">
             Website Projects
@@ -791,8 +907,10 @@ export default function ProjectsSection() {
         </div>
 
         {/* ── Websites grid ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-          {WEBSITES.map((site) => <WebCard key={site.num} site={site} />)}
+        <div className="proj-web-cards grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+          {WEBSITES.map((site) => (
+            <div key={site.num}><WebCard site={site} /></div>
+          ))}
         </div>
       </div>
     </section>

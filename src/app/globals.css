@@ -55,3 +55,8 @@ body {
 .marquee-row:hover .marquee-right {
   animation-play-state: paused;
 }
+
+
+button {
+  cursor: pointer;
+}

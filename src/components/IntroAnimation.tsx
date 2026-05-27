@@ -63,13 +63,13 @@ export default function IntroAnimation() {
         yPercent: -102,
         duration: 1.05,
         ease: "power4.inOut",
-      }, 1.28);
+      }, 1);
 
       tl.to(panelBotRef.current, {
         yPercent: 102,
         duration: 1.05,
         ease: "power4.inOut",
-      }, 1.35); /* slight stagger = premium split feel */
+      }, 1); /* slight stagger = premium split feel */
 
       /* Remove overlay from DOM flow when done */
       tl.set(overlayRef.current, { display: "none" }, 2.4);
@@ -129,14 +129,14 @@ export default function IntroAnimation() {
       {/* ── Top curtain panel ── */}
       <div
         ref={panelTopRef}
-        className="absolute inset-x-0 top-0 bg-[#0c0c0c]"
+        className="absolute inset-x-0 top-0 bg-[#1B48E8]"
         style={{ height: "51vh" }}
       />
 
       {/* ── Bottom curtain panel ── */}
       <div
         ref={panelBotRef}
-        className="absolute inset-x-0 bottom-0 bg-[#0c0c0c]"
+        className="absolute inset-x-0 bottom-0 bg-[#1B48E8]"
         style={{ height: "51vh" }}
       />
 
@@ -153,7 +153,7 @@ export default function IntroAnimation() {
             fontSize: "clamp(4.5rem, 13vw, 10.5rem)",
             lineHeight: 1,
             letterSpacing: "-0.04em",
-            opacity: 0.13,
+            opacity: 1,
           }}
         >
           000

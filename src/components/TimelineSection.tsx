@@ -1,33 +1,28 @@
 "use client";
-import Image from "next/image";
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // TimelineSection — Work Experience
-// Centered single-column, scroll-triggered animations
-// ─────────────────────────────────────────────
+//
+//  • Label "03"    : blur fade-in
+//  • Heading       : word-by-word blur + y (same as every other section)
+//  • Sub-copy      : single-block blur + y
+//  • Timeline line : scaleY 0 → 1 from top, power2.inOut
+//  • Entry cards   : stagger y:50 → 0 + opacity
+//  • Pixel dots    : spring-pop scale:0 → 1, back.out, staggered
+// ─────────────────────────────────────────────────────────────────────────────
 
-import React, { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import { useEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-// ─── IntersectionObserver hook ────────────────
+gsap.registerPlugin(ScrollTrigger);
 
-function useInView(threshold = 0.15) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [inView, setInView] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) { setInView(true); obs.disconnect(); }
-      },
-      { threshold }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [threshold]);
-  return { ref, inView };
+// ── Word-wrapper ──────────────────────────────────────────────────────────────
+function W({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <span className={`sw inline-block ${className}`}>{children}</span>;
 }
 
-// ─── Data ─────────────────────────────────────
+// ─── Data ─────────────────────────────────────────────────────────────────────
 
 interface TimelineEntry {
   period: string;
@@ -78,21 +73,17 @@ const WORK: TimelineEntry[] = [
   },
 ];
 
-// ─── PixelDot ─────────────────────────────────
-
-function PixelDot({ active, visible }: { active?: boolean; visible?: boolean }) {
-  const fill   = active ? "#1B48E8" : "#ffffff22";
+// ─── PixelDot ──────────────────────────────────────────────────────────────────
+// Transitions are now owned by GSAP — no inline styles needed here.
+function PixelDot({ active }: { active?: boolean }) {
+  const fill   = active ? "#1B48E8"    : "#ffffff22";
   const corner = active ? "#1B48E8bb" : "#ffffff18";
-  const center = active ? "#1B48E8" : "#ffffff0f";
+  const center = active ? "#1B48E8"    : "#ffffff0f";
   return (
     <svg
       width="14" height="14" viewBox="0 0 14 14" fill="none"
       aria-hidden="true"
-      style={{
-        transform: visible ? "scale(1)" : "scale(0)",
-        opacity: visible ? 1 : 0,
-        transition: "transform 0.45s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease-out",
-      }}
+      className="pixel-dot"
     >
       <rect x="4"  y="0"  width="6" height="2" fill={fill}   />
       <rect x="4"  y="12" width="6" height="2" fill={fill}   />
@@ -107,42 +98,19 @@ function PixelDot({ active, visible }: { active?: boolean; visible?: boolean }) 
   );
 }
 
-// ─── Entry Card ───────────────────────────────
-
-function Entry({
-  e,
-  active,
-  index,
-  inView,
-}: {
-  e: TimelineEntry;
-  active?: boolean;
-  index: number;
-  inView: boolean;
-}) {
-  const delay = index * 200;
-
+// ─── Entry Card ───────────────────────────────────────────────────────────────
+function Entry({ e, active }: { e: TimelineEntry; active?: boolean }) {
   return (
-    <div
-      className="relative pl-9 sm:pl-12"
-      style={{
-        opacity: inView ? 1 : 0,
-        transform: inView ? "translateY(0)" : "translateY(40px)",
-        transition: "opacity 0.7s ease-out, transform 0.7s ease-out",
-        transitionDelay: `${delay}ms`,
-      }}
-    >
-      {/* Pixel dot — bouncy pop-in */}
-      <div
-        className="absolute left-0 top-[20px] -translate-x-[3px]"
-        style={{ transitionDelay: `${delay + 150}ms` }}
-      >
-        <PixelDot active={active} visible={inView} />
+    <div className="timeline-entry relative pl-9 sm:pl-12">
+
+      {/* Pixel dot */}
+      <div className="absolute left-0 top-[20px] -translate-x-[3px]">
+        <PixelDot active={active} />
       </div>
 
       {/* Card */}
       <div
-        className="rounded-2xl backdrop-blur-sm  border p-6 sm:p-8 transition-colors duration-300 group"
+        className="rounded-2xl backdrop-blur-sm border p-6 sm:p-8 transition-colors duration-300"
         style={{
           borderColor: active ? "rgba(27,72,232,0.28)" : "rgba(255,255,255,0.07)",
           background: active
@@ -153,7 +121,7 @@ function Entry({
             : "none",
         }}
       >
-        {/* Period + Badge row */}
+        {/* Period + Badge */}
         <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
           <span
             className="font-mondwest text-[11px] sm:text-[12px] tracking-[0.09em]"
@@ -175,7 +143,7 @@ function Entry({
           )}
         </div>
 
-        {/* Role title */}
+        {/* Role */}
         <h4
           className="font-inter font-bold text-white leading-[1.2] mb-2"
           style={{ fontSize: "clamp(1rem, 2.4vw, 1.2rem)" }}
@@ -205,14 +173,98 @@ function Entry({
   );
 }
 
-// ─── Section ──────────────────────────────────
+// ─── Section ───────────────────────────────────────────────────────────────────
 
 export default function TimelineSection() {
-  const { ref: headRef, inView: headInView } = useInView(0.3);
-  const { ref: listRef, inView: listInView } = useInView(0.05);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+
+      // ── Label ──────────────────────────────────────────────────────────
+      gsap.fromTo(
+        ".timeline-label",
+        { opacity: 0, y: 10, filter: "blur(6px)" },
+        {
+          opacity: 1, y: 0, filter: "blur(0px)",
+          duration: 0.7, ease: "power3.out",
+          scrollTrigger: { trigger: ".timeline-label", start: "top 86%" },
+          onComplete() { gsap.set(".timeline-label", { filter: "none" }); },
+        },
+      );
+
+      // ── Heading word-by-word blur ──────────────────────────────────────
+      gsap.set(".timeline-heading .sw", { willChange: "filter, transform, opacity" });
+
+      gsap.fromTo(
+        ".timeline-heading .sw",
+        { opacity: 0, filter: "blur(14px)", y: 22 },
+        {
+          opacity: 1, filter: "blur(0px)", y: 0,
+          duration: 0.88, stagger: 0.07, ease: "power3.out",
+          scrollTrigger: { trigger: ".timeline-heading", start: "top 82%" },
+          onComplete() {
+            gsap.set(".timeline-heading .sw", { willChange: "auto", filter: "none" });
+          },
+        },
+      );
+
+      // ── Sub-copy ───────────────────────────────────────────────────────
+      gsap.fromTo(
+        ".timeline-sub",
+        { opacity: 0, filter: "blur(10px)", y: 18 },
+        {
+          opacity: 1, filter: "blur(0px)", y: 0,
+          duration: 0.9, ease: "power3.out",
+          scrollTrigger: { trigger: ".timeline-sub", start: "top 86%" },
+          onComplete() { gsap.set(".timeline-sub", { filter: "none" }); },
+        },
+      );
+
+      // ── Vertical timeline line ─────────────────────────────────────────
+      gsap.fromTo(
+        ".timeline-line",
+        { scaleY: 0 },
+        {
+          scaleY: 1,
+          duration: 1.6,
+          ease: "power2.inOut",
+          transformOrigin: "top",
+          scrollTrigger: { trigger: ".timeline-list", start: "top 82%" },
+        },
+      );
+
+      // ── Entry cards stagger ────────────────────────────────────────────
+      gsap.fromTo(
+        ".timeline-entry",
+        { opacity: 0, y: 50 },
+        {
+          opacity: 1, y: 0,
+          duration: 0.85, stagger: 0.18, ease: "expo.out",
+          scrollTrigger: { trigger: ".timeline-list", start: "top 82%" },
+        },
+      );
+
+      // ── Pixel dots spring-pop (delayed after card starts) ─────────────
+      gsap.fromTo(
+        ".pixel-dot",
+        { scale: 0, opacity: 0 },
+        {
+          scale: 1, opacity: 1,
+          duration: 0.5, stagger: 0.18, ease: "back.out(1.8)",
+          delay: 0.2,
+          scrollTrigger: { trigger: ".timeline-list", start: "top 82%" },
+        },
+      );
+
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
 
   return (
-    <section className="relative overflow-hidden hero-grid">
+    <section ref={sectionRef} className="relative overflow-hidden hero-grid">
+
       {/* Left vignettes */}
       <div className="absolute top-0 left-0 h-full pointer-events-none z-[1]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -230,85 +282,48 @@ export default function TimelineSection() {
 
       <div className="relative z-[2] px-5 sm:px-8 md:px-[clamp(32px,8.5vw,130px)] pt-14 sm:pt-20 md:pt-24 pb-16 sm:pb-24 md:pb-28">
 
-        {/* ── Centered Heading ── */}
-        <div
-          ref={headRef}
-          className="text-center mb-14 sm:mb-20"
-        >
-          {/* 03 counter */}
-          <p
-            className="font-mondwest text-[#1B48E8] text-[13px] tracking-[0.1em] mb-3"
-            style={{
-              opacity: headInView ? 1 : 0,
-              transform: headInView ? "translateX(0)" : "translateX(-14px)",
-              transition: "opacity 0.5s ease-out, transform 0.5s ease-out",
-            }}
-          >
+        {/* ── Heading block ── */}
+        <div className="text-center mb-14 sm:mb-20">
+
+          <p className="timeline-label font-mondwest text-[#1B48E8] text-[13px] tracking-[0.1em] mb-3">
             03
           </p>
 
           <h2
-            className="font-inter font-bold text-white leading-[1.05] tracking-[-0.025em]"
-            style={{
-              fontSize: "clamp(1.75rem, 4.5vw, 3rem)",
-              opacity: headInView ? 1 : 0,
-              transform: headInView ? "translateY(0)" : "translateY(22px)",
-              transition: "opacity 0.7s ease-out, transform 0.7s ease-out",
-              transitionDelay: "60ms",
-            }}
+            className="timeline-heading font-inter font-bold text-white leading-[1.05] tracking-[-0.025em]"
+            style={{ fontSize: "clamp(1.75rem, 4.5vw, 3rem)" }}
           >
-            Work{" "}
-           
-            <span className="font-mondwest font-normal italic text-white/70">
-              experience
-            </span>
-             <Image
-                        src="/dt-4-research.png"
-                        alt=""
-                        width={500}
-                        height={500}
-                        className="inline-block align-middle w-auto h-[1em] mx-1"
-                      />
+            <W>Work</W>{" "}
+            <W className="font-mondwest font-normal italic text-white/70">experience</W>{" "}
+            <W className="align-middle">
+              <Image
+                src="/dt-4-research.png"
+                alt=""
+                width={500}
+                height={500}
+                className="inline-block align-middle w-auto h-[1em] mx-1"
+              />
+            </W>
           </h2>
 
-          <p
-            className="text-white/40 text-[13px] sm:text-[14px] mt-3 mx-auto max-w-[420px] leading-relaxed"
-            style={{
-              opacity: headInView ? 1 : 0,
-              transform: headInView ? "translateY(0)" : "translateY(12px)",
-              transition: "opacity 0.6s ease-out, transform 0.6s ease-out",
-              transitionDelay: "160ms",
-            }}
-          >
+          <p className="timeline-sub text-white/40 text-[13px] sm:text-[14px] mt-3 mx-auto max-w-[420px] leading-relaxed">
             3+ years building production systems — from startups to enterprise.
           </p>
         </div>
 
-        {/* ── Centered Timeline ── */}
+        {/* ── Timeline list ── */}
         <div className="max-w-[740px] mx-auto">
-          <div ref={listRef} className="relative">
+          <div className="timeline-list relative">
 
             {/* Animated vertical line */}
             <div
-              className="absolute left-[3px] top-3 w-px  bg-gradient-to-b from-[#1B48E8] via-white/[0.07] to-transparent"
-              style={{
-                height: "calc(100% - 12px)",
-                transformOrigin: "top",
-                transform: listInView ? "scaleY(1)" : "scaleY(0)",
-                transition: "transform 1.6s cubic-bezier(0.16,1,0.3,1)",
-                transitionDelay: "300ms",
-              }}
+              className="timeline-line absolute left-[3px] top-3 w-px bg-gradient-to-b from-[#1B48E8] via-white/[0.07] to-transparent"
+              style={{ height: "calc(100% - 12px)", transformOrigin: "top", transform: "scaleY(0)" }}
             />
 
             <div className="flex flex-col gap-8 sm:gap-10">
               {WORK.map((e, i) => (
-                <Entry
-                  key={i}
-                  e={e}
-                  active={i === 0}
-                  index={i}
-                  inView={listInView}
-                />
+                <Entry key={i} e={e} active={i === 0} />
               ))}
             </div>
           </div>
